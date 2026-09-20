@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500&display=swap');
+
+.qp-auth {
+  font-family: 'Archivo', system-ui, sans-serif;
+}
+
+/* Headlines use Archivo's width axis: wide, heavy, like airline signage */
+.qp-display {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-stretch: 118%;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+}
+
+/* Mono is used ONLY inside the agent trace, where it is real "terminal" content */
+.qp-mono {
+  font-family: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+.qp-auth ::selection {
+  background: #2b5bc0;
+  color: #f8fafa;
+}
+
+/* The one bold idea: an airmail envelope border */
+.qp-envelope {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Browser autofill should not paint the inputs yellow/white */
+.qp-input:-webkit-autofill,
+.qp-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #10202f;
+  box-shadow: 0 0 0 1000px #f8fafa inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* Postmark "thunks" onto the envelope once, on page load */
+.qp-postmark {
+  transform: rotate(-8deg);
+  mix-blend-mode: multiply;
+  animation: qp-stamp 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s both;
+}
+
+/* Agent trace bits */
+.qp-caret {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: #31b8c6;
+  animation: qp-blink 1s steps(1) infinite;
+}
+
+.qp-spinner {
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: qp-spin 0.7s linear infinite;
+}
+
+.qp-live {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #31b8c6;
+  animation: qp-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes qp-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-20deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.95) rotate(-9deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+
+@keyframes qp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes qp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes qp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qp-auth *,
+  .qp-auth *::before {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
