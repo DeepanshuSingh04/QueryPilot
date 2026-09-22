@@ -4,6 +4,9 @@ import { ChatGroq } from "@langchain/groq"
 import { HumanMessage, SystemMessage, AIMessage, tool, createAgent } from "langchain";
 import * as z from "zod";
 import { searchInternet } from "./internet.service.js";
+import { getWeather } from "./weather.service.js";
+import { getNews } from "./news.service.js";
+import { getStockPrice } from "./stocks.service.js";
 
 const groqModel = new ChatGroq({
     model: "openai/gpt-oss-120b", // free tier: 30 req/min, 1,000 req/day, tool-calling supported
@@ -24,29 +27,64 @@ const searchInternetTool = tool(
     searchInternet,
     {
         name: "searchInternet",
-        description: "Use this tool to get the latest information from the internet.",
+        description: "Use this tool to get the latest general information from the internet for anything not covered by the weather, news, or stock tools.",
         schema: z.object({
             query: z.string().describe("The search query to look up on the internet.")
         })
     }
 )
 
+const getWeatherTool = tool(
+    getWeather,
+    {
+        name: "getWeather",
+        description: "Use this tool to get the current weather and today's forecast for a specific city.",
+        schema: z.object({
+            city: z.string().describe("The city name to get weather for, e.g. 'Delhi' or 'New York'.")
+        })
+    }
+)
+
+const getNewsTool = tool(
+    getNews,
+    {
+        name: "getNews",
+        description: "Use this tool to get the latest news headlines about a topic, company, or event.",
+        schema: z.object({
+            query: z.string().describe("The topic or keyword to search news for, e.g. 'India elections' or 'Tesla'.")
+        })
+    }
+)
+
+const getStockPriceTool = tool(
+    getStockPrice,
+    {
+        name: "getStockPrice",
+        description: "Use this tool to get the latest stock price and daily change for a given ticker symbol.",
+        schema: z.object({
+            symbol: z.string().describe("The stock ticker symbol, e.g. 'AAPL', 'TSLA', 'RELIANCE.BSE'.")
+        })
+    }
+)
+
+const allTools = [ searchInternetTool, getWeatherTool, getNewsTool, getStockPriceTool ]
+
 // Three identical agents, one per provider. Groq goes first (most free
 // headroom), Mistral and Gemini are fallbacks for whenever the one before
 // it gets rate-limited.
 const groqAgent = createAgent({
     model: groqModel,
-    tools: [ searchInternetTool ],
+    tools: allTools,
 })
 
 const mistralAgent = createAgent({
     model: mistralModel,
-    tools: [ searchInternetTool ],
+    tools: allTools,
 })
 
 const geminiAgent = createAgent({
     model: geminiModel,
-    tools: [ searchInternetTool ],
+    tools: allTools,
 })
 
 // Provider client errors carry the HTTP status in different places
@@ -58,8 +96,13 @@ function isRateLimitError(err) {
 
 const SYSTEM_PROMPT = `
     You are a helpful and precise assistant for answering questions.
-    If you don't know the answer, say you don't know. 
-    If the question requires up-to-date information, use the "searchInternet" tool to get the latest information from the internet and then answer based on the search results.
+    If you don't know the answer, say you don't know.
+    You have access to these tools for real-time data, beyond your own search knowledge:
+    - "searchInternet": general up-to-date information from the web.
+    - "getWeather": current weather and today's forecast for a city.
+    - "getNews": latest news headlines about a topic.
+    - "getStockPrice": latest stock price and change for a ticker symbol.
+    Pick the most specific tool for the question (e.g. use getWeather for weather questions instead of searchInternet), and answer based on what the tool returns.
 `
 
 const withTimeout = (promise, ms, label) =>
@@ -133,18 +176,23 @@ export async function generateChatTitle(message) {
             `)
     ]
 
-    const response = await invokeWithFallback(
-        [
-            { name: "Groq", model: groqModel },
-            { name: "Mistral", model: mistralModel },
-            { name: "Gemini", model: geminiModel },
-        ],
-        (provider) => withTimeout(
-            provider.model.invoke(titleMessages),
+    // Title generation intentionally does NOT use the Groq → Mistral → Gemini
+    // fallback chain. It's a low-value, throwaway call, so it only ever hits
+    // Groq (the provider with the most free-tier headroom: 30 req/min, 1000/day).
+    // Mistral (1 req/sec free tier) and Gemini are reserved for the actual
+    // answer in generateResponse — burning them on a title was doubling our
+    // provider calls per new chat and tripping rate limits fast.
+    // If Groq itself fails for any reason, we fall back to a cheap, local
+    // heuristic title instead of spending another provider's quota.
+    try {
+        const response = await withTimeout(
+            groqModel.invoke(titleMessages),
             15000,
-            `${provider.name} title`
+            "Groq title"
         )
-    )
-
-    return response.text
+        return response.text
+    } catch (err) {
+        console.warn("Groq title generation failed, falling back to a heuristic title:", err?.message)
+        return message.trim().split(/\s+/).slice(0, 6).join(" ")
+    }
 }
