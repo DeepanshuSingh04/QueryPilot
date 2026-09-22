@@ -15,7 +15,7 @@ initSocket(httpServer);
 
 connectDB()
     .then(() => {
-        app.listen(PORT, () => {
+        httpServer.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });
     })
@@ -23,8 +23,3 @@ connectDB()
         console.error("Failed to connect to the database:", err);
         process.exit(1);
     });
-
-
-httpServer.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-})    
