@@ -6,7 +6,7 @@ let io;
 export function initSocket(httpServer) {
     io = new Server(httpServer, {
         cors: {
-            origin: "https://querypilot-y0p7.onrender.com/",
+            origin: "https://query-pilot-jet.vercel.app",
             credentials: true,
         }
     })

@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(cors({
-    origin: "https://querypilot-y0p7.onrender.com/",
+    origin: "https://query-pilot-jet.vercel.app",
     credentials: true,
     methods: [ "GET", "POST", "PUT", "DELETE"],
     
