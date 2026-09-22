@@ -5,13 +5,14 @@ import { useAuth } from '../hook/useAuth'
 import { AuthLayout, Field, SubmitButton } from './AuthLayout'
 
 const linkClass =
-  'font-bold text-[#2B5BC0] underline underline-offset-4 transition-colors hover:text-[#E0472F]'
+  'font-semibold text-[#f2f0ea] underline underline-offset-4 decoration-[#e2402f]/50 transition-colors hover:text-[#e2402f]'
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
 
   const user = useSelector((state) => state.auth.user)
   const loading = useSelector((state) => state.auth.loading)
@@ -22,12 +23,16 @@ const Login = () => {
   const submitForm = async (event) => {
     event.preventDefault()
     setSubmitting(true)
+    setFormError('')
 
-    try {
-      await handleLogin({ email, password })
+    const result = await handleLogin({ email, password })
+
+    setSubmitting(false)
+
+    if (result.success) {
       navigate('/')
-    } finally {
-      setSubmitting(false)
+    } else {
+      setFormError(result.message)
     }
   }
 
@@ -72,12 +77,16 @@ const Login = () => {
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-pressed={showPassword}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#2B5BC0] hover:text-[#E0472F]"
+              className="qp-mono absolute right-0 top-1/2 -translate-y-1/2 text-[11px] uppercase tracking-[0.1em] text-[#f2f0ea]/50 hover:text-[#e2402f]"
             >
               {showPassword ? 'Hide' : 'Show'}
             </button>
           }
         />
+
+        {formError && (
+          <p className="qp-mono text-[12px] leading-relaxed text-[#e2402f]">{formError}</p>
+        )}
 
         <div className="pt-2">
           <SubmitButton loading={submitting} label="Sign in" loadingLabel="Signing in…" />

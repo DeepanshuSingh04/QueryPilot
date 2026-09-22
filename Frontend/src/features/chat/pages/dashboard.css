@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;600&display=swap');
+
+.qp-dash {
+  --bg: #0b0b0c;
+  --panel: #111113;
+  --panel-2: #0e0e10;
+  --border: #232326;
+  --border-soft: #1a1a1c;
+  --ink: #edebe6;
+  --ink-dim: rgba(237, 235, 230, 0.55);
+  --ink-faint: rgba(237, 235, 230, 0.32);
+  --accent: #e2402f;
+  --accent-dim: rgba(226, 64, 47, 0.12);
+  font-family: 'Archivo', system-ui, sans-serif;
+}
+
+.qp-dash-mono {
+  font-family: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+.qp-dash ::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.qp-dash-live {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.qp-dash-live.thinking {
+  animation: qp-dash-pulse 1.4s ease-in-out infinite;
+}
+
+.qp-dash-dots span {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-right: 3px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  animation: qp-dash-dots 1.2s ease-in-out infinite;
+}
+.qp-dash-dots span:nth-child(2) { animation-delay: 0.15s; }
+.qp-dash-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+.qp-dash-scroll::-webkit-scrollbar { width: 6px; }
+.qp-dash-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+.qp-dash-scroll::-webkit-scrollbar-track { background: transparent; }
+
+.qp-dash-row {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.qp-dash-input {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.qp-dash-send {
+  transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+.qp-dash-send:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.qp-dash-sidebar {
+  transition: transform 0.22s ease;
+}
+
+@keyframes qp-dash-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes qp-dash-dots {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qp-dash * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

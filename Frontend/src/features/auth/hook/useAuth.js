@@ -11,10 +11,16 @@ export function useAuth() {
     async function handleRegister({ email, username, password }) {
         try {
             dispatch(setLoading(true))
+            dispatch(setError(null))
             const data = await register({ email, username, password })
+            return { success: true, data }
         } catch (error) {
-            dispatch(setError(error.response?.data?.message || "Registeration failed"))
-
+            const message =
+                error.response?.data?.message ||
+                error.response?.data?.errors?.[0]?.msg ||
+                "Registration failed"
+            dispatch(setError(message))
+            return { success: false, message }
         } finally {
             dispatch(setLoading(false))
         }
@@ -23,10 +29,17 @@ export function useAuth() {
     async function handleLogin({ email, password }) {
         try {
             dispatch(setLoading(true))
+            dispatch(setError(null))
             const data = await login({ email, password })
             dispatch(setUser(data.user))
+            return { success: true, data }
         } catch (err) {
-            dispatch(setError(err.response?.data?.message || "Login failed"))
+            const message =
+                err.response?.data?.message ||
+                err.response?.data?.errors?.[0]?.msg ||
+                "Login failed"
+            dispatch(setError(message))
+            return { success: false, message }
         } finally {
             dispatch(setLoading(false))
         }
@@ -34,13 +47,16 @@ export function useAuth() {
 
 
     async function handleGetMe() {
-        try { 
+        try {
             dispatch(setLoading(true))
             const data = await getMe()
             dispatch(setUser(data.user))
-
-        } catch(err) {
-            dispatch(setError(err.response?.data?.message || "Failed to fetch user"))
+            return { success: true, data }
+        } catch (err) {
+            // Runs once on app load to check for an existing session — a 401 here
+            // just means "not logged in yet", so it should stay silent, not surface
+            // as a form error.
+            return { success: false }
         } finally {
             dispatch(setLoading(false))
         }

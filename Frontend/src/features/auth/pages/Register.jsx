@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { useAuth } from '../hook/useAuth'
 import { AuthLayout, Field, SubmitButton } from './AuthLayout'
 
 const linkClass =
-  'font-bold text-[#2B5BC0] underline underline-offset-4 transition-colors hover:text-[#E0472F]'
+  'font-semibold text-[#f2f0ea] underline underline-offset-4 decoration-[#e2402f]/50 transition-colors hover:text-[#e2402f]'
 
 // 0-4: length, mixed case, a number, a symbol
 const scorePassword = (pw) => {
@@ -22,20 +23,31 @@ const Register = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [notice, setNotice] = useState('')
+
+  const { handleRegister } = useAuth()
+  const navigate = useNavigate()
 
   const score = scorePassword(password)
 
-  const submitForm = (event) => {
+  const submitForm = async (event) => {
     event.preventDefault()
+    setSubmitting(true)
+    setFormError('')
+    setNotice('')
 
-    const payload = {
-      username,
-      email,
-      password,
+    const result = await handleRegister({ username, email, password })
+
+    setSubmitting(false)
+
+    if (result.success) {
+      setNotice('Account created — check your email for a verification link, then sign in.')
+      setTimeout(() => navigate('/login'), 2200)
+    } else {
+      setFormError(result.message)
     }
-
-    // TODO: call your register handler here once the backend route is wired
-    console.log('Register payload:', payload)
   }
 
   return (
@@ -84,32 +96,39 @@ const Register = () => {
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-pressed={showPassword}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#2B5BC0] hover:text-[#E0472F]"
+              className="qp-mono absolute right-0 top-1/2 -translate-y-1/2 text-[11px] uppercase tracking-[0.1em] text-[#f2f0ea]/50 hover:text-[#e2402f]"
             >
               {showPassword ? 'Hide' : 'Show'}
             </button>
           }
         >
-          {/* strength meter: red while weak, blue once it is good */}
+          {/* strength meter: dim red while weak, full red once it is strong */}
           <div className="mt-3 flex items-center gap-3 pl-[96px]">
             <div className="flex flex-1 gap-1.5" aria-hidden="true">
               {[1, 2, 3, 4].map((i) => (
                 <span
                   key={i}
-                  className={`h-[4px] flex-1 transition-colors duration-300 ${
-                    i <= score ? (score <= 2 ? 'bg-[#E0472F]' : 'bg-[#2B5BC0]') : 'bg-[#10202F]/15'
+                  className={`h-[3px] flex-1 transition-colors duration-300 ${
+                    i <= score ? (score <= 2 ? 'bg-[#e2402f]/45' : 'bg-[#e2402f]') : 'bg-[#262626]'
                   }`}
                 />
               ))}
             </div>
-            <span className="w-28 text-right text-[12px] text-[#10202F]/60" aria-live="polite">
+            <span className="qp-mono w-28 text-right text-[10.5px] uppercase tracking-[0.08em] text-[#f2f0ea]/40" aria-live="polite">
               {password ? LEVELS[score] : 'Use 8+ characters'}
             </span>
           </div>
         </Field>
 
+        {formError && (
+          <p className="qp-mono text-[12px] leading-relaxed text-[#e2402f]">{formError}</p>
+        )}
+        {notice && (
+          <p className="qp-mono text-[12px] leading-relaxed text-[#f2f0ea]/70">{notice}</p>
+        )}
+
         <div className="pt-2">
-          <SubmitButton loading={false} label="Create account" loadingLabel="Creating account…" />
+          <SubmitButton loading={submitting} label="Create account" loadingLabel="Creating account…" />
         </div>
       </form>
     </AuthLayout>
