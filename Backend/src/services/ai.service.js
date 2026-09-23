@@ -7,6 +7,8 @@ import { searchInternet } from "./internet.service.js";
 import { getWeather } from "./weather.service.js";
 import { getNews } from "./news.service.js";
 import { getStockPrice } from "./stocks.service.js";
+import { sendEmail } from "./mail.service.js";
+
 
 const groqModel = new ChatGroq({
     model: "openai/gpt-oss-120b", // free tier: 30 req/min, 1,000 req/day, tool-calling supported
@@ -67,7 +69,20 @@ const getStockPriceTool = tool(
     }
 )
 
-const allTools = [ searchInternetTool, getWeatherTool, getNewsTool, getStockPriceTool ]
+const sendEmailTool = tool(
+    sendEmail,
+    {
+        name: "sendEmail",
+        description: "Use this tool to send an email to a given address on the user's behalf. Only use it when the user explicitly asks to send/email something to someone.",
+        schema: z.object({
+            to: z.string().describe("The recipient's email address."),
+            subject: z.string().describe("The subject line of the email."),
+            html: z.string().describe("The HTML content/body of the email.")
+        })
+    }
+)
+
+const allTools = [ searchInternetTool, getWeatherTool, getNewsTool, getStockPriceTool, sendEmailTool ]
 
 // Three identical agents, one per provider. Groq goes first (most free
 // headroom), Mistral and Gemini are fallbacks for whenever the one before
@@ -102,6 +117,7 @@ const SYSTEM_PROMPT = `
     - "getWeather": current weather and today's forecast for a city.
     - "getNews": latest news headlines about a topic.
     - "getStockPrice": latest stock price and change for a ticker symbol.
+    - "sendEmail": sends an email to a given address. Only use this when the user explicitly asks you to send/email something to someone — never send an email on your own initiative.
     Pick the most specific tool for the question (e.g. use getWeather for weather questions instead of searchInternet), and answer based on what the tool returns.
 `
 
