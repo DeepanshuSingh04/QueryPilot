@@ -193,3 +193,24 @@ export async function verifyEmail(req, res) {
     }
     
 }
+
+
+/**
+ * @desc Log the current user out by clearing their auth cookie
+ * @route POST /api/auth/logout
+ * @access Private
+ */
+export async function logout(req, res) {
+    // clearCookie must be called with the same options the cookie was set
+    // with (path/sameSite/secure), otherwise the browser won't remove it
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    })
+
+    res.status(200).json({
+        message: "Logged out successfully",
+        success: true
+    })
+}

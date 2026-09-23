@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useDispatch, useSelector } from 'react-redux'
 import { useChat } from '../hooks/useChat'
+import { useAuth } from '../../auth/hook/useAuth'
 import { setCurrentChatId, setError } from '../chat.slice'
 import remarkGfm from 'remark-gfm'
 import './dashboard.css'
@@ -72,6 +73,7 @@ function groupChats(chatList) {
 
 const Dashboard = () => {
   const chat = useChat()
+  const auth = useAuth()
   const dispatch = useDispatch()
 
   const [chatInput, setChatInput] = useState('')
@@ -83,6 +85,7 @@ const Dashboard = () => {
   const currentChatId = useSelector((state) => state.chat.currentChatId)
   const isLoading = useSelector((state) => state.chat.isLoading)
   const error = useSelector((state) => state.chat.error)
+  const user = useSelector((state) => state.auth.user)
 
   useEffect(() => {           // dashboard page pr phochte hi initializeSocketConnection() ise caall krdete hain or socket.io connecct hojata hain user bhi
     chat.initializeSocketConnection()
@@ -208,8 +211,21 @@ const Dashboard = () => {
           ))}
         </div>
 
-        <div className="qp-dash-mono border-t border-[var(--border)] px-5 py-3.5 text-[10px] uppercase tracking-[0.1em] text-[var(--ink-faint)]">
+        <div className="qp-dash-mono px-5 py-2.5 text-[10px] uppercase tracking-[0.1em] text-[var(--ink-faint)]">
           Web search + email tools active
+        </div>
+
+        <div className="flex items-center justify-between border-t border-[var(--border)] px-5 py-3.5">
+          <span className="truncate text-[12.5px] text-[var(--ink-dim)]" title={user?.email}>
+            {user?.username || user?.email || 'Account'}
+          </span>
+          <button
+            type="button"
+            onClick={auth.handleLogout}
+            className="qp-dash-row shrink-0 border border-[var(--border)] px-2.5 py-1 text-[11px] text-[var(--ink-dim)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+          >
+            Log out
+          </button>
         </div>
       </aside>
 

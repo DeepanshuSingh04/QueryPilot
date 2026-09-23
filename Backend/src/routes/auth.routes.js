@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {loginValidator, registerValidator} from "../validators/auth.validator.js";
-import { login, register, verifyEmail, getMe } from "../controllers/auth.controller.js";
+import { login, register, verifyEmail, getMe, logout } from "../controllers/auth.controller.js";
 import { authUser } from "../middleware/auth.middleware.js";
 
 
@@ -23,6 +23,15 @@ authRouter.post("/register", registerValidator, register);
  * @body { email, password }
  */
 authRouter.post("/login", loginValidator, login)
+
+
+
+/**
+ * @route POST /api/auth/logout
+ * @desc Clear the logged-in user's auth cookie
+ * @access Private
+ */
+authRouter.post('/logout', authUser, logout)
 
 
 
