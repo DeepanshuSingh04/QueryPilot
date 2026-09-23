@@ -1,64 +1,30 @@
-import nodemailer from "nodemailer";
-import dns from "node:dns/promises";
+import { Resend } from "resend";
 
-const withTimeout = (promise, ms, label) =>
-    Promise.race([
-        promise,
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
-        ),
-    ])
-
-// Nodemailer resolves BOTH IPv4 and IPv6 addresses of the SMTP host internally
-// and picks ONE AT RANDOM to connect to. On Render (and many cloud hosts)
-// outbound IPv6 has no real route, so it randomly fails with ENETUNREACH
-// roughly half the time. Passing a literal IP as "host" makes Nodemailer skip
-// that random picking entirely (see resolveHostname in its shared/index.js).
-async function resolveSmtpHost() {
-    try {
-        const [ ip ] = await withTimeout(dns.resolve4("smtp.gmail.com"), 8000, "DNS resolve4")
-        console.log(`Resolved smtp.gmail.com -> ${ip} (IPv4, literal)`)
-        return ip;
-    } catch (err) {
-        console.warn("Could not pre-resolve smtp.gmail.com to IPv4, falling back to hostname:", err.message);
-        return "smtp.gmail.com";
-    }
-}
-
-console.log("mail.service.js: starting SMTP host resolution...")
-const smtpHost = await resolveSmtpHost();
-console.log(`mail.service.js: using SMTP host = ${smtpHost}`)
-
-const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    servername: "smtp.gmail.com", // keeps TLS certificate check matching the real hostname, even though we connect via raw IP
-    port: 465,
-    secure: true,
-    auth: {
-        type: 'OAuth2',
-        user: process.env.GOOGLE_USER,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        clientId: process.env.GOOGLE_CLIENT_ID
-    }
-})
-
-transporter.verify()
-.then(()=> { console.log("Email transporter is ready to send emails"); })
-.catch((err) => { console.error("Email transporter verification failed", err); });
-
+// Render's free tier blocks outbound SMTP ports (25, 465, 587) entirely —
+// so raw SMTP (Nodemailer + Gmail OAuth2) can never work here, no matter
+// how it's configured. Resend sends over plain HTTPS instead, which is
+// never blocked.
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEmail({ to, subject, html, text }) {
-    console.log(`sendEmail: attempting to send to ${to} via host ${smtpHost}`)
-
-    const mailOptions = {
-        from: process.env.GOOGLE_USER,
+    const { data, error } = await resend.emails.send({
+        // Until a custom domain is verified on resend.com/domains, this
+        // sender can only deliver to the email address the Resend account
+        // itself is registered with. Once a domain is verified, replace
+        // "onboarding@resend.dev" with an address on that domain to send
+        // to any recipient.
+        from: "QueryPilot <onboarding@resend.dev>",
         to,
         subject,
         html,
-        text
+        text,
+    });
+
+    if (error) {
+        console.error("Resend email error:", error);
+        throw new Error(error.message || "Failed to send email");
     }
 
-    const details = await transporter.sendMail(mailOptions);
-    console.log("Email sent:", details)
+    console.log("Email sent:", data);
+    return data;
 }
