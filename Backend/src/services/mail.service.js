@@ -1,7 +1,10 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    family: 4, // Render ke servers pe IPv6 route na milne ki wajah se ENETUNREACH aata hai — IPv4 force karo
     auth: {
         type: 'OAuth2',
         user: process.env.GOOGLE_USER,
