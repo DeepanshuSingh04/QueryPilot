@@ -1,6 +1,14 @@
 import nodemailer from "nodemailer";
 import dns from "node:dns/promises";
 
+const withTimeout = (promise, ms, label) =>
+    Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+        ),
+    ])
+
 // Nodemailer resolves BOTH IPv4 and IPv6 addresses of the SMTP host internally
 // and picks ONE AT RANDOM to connect to. On Render (and many cloud hosts)
 // outbound IPv6 has no real route, so it randomly fails with ENETUNREACH
@@ -8,7 +16,8 @@ import dns from "node:dns/promises";
 // that random picking entirely (see resolveHostname in its shared/index.js).
 async function resolveSmtpHost() {
     try {
-        const [ ip ] = await dns.resolve4("smtp.gmail.com");
+        const [ ip ] = await withTimeout(dns.resolve4("smtp.gmail.com"), 8000, "DNS resolve4")
+        console.log(`Resolved smtp.gmail.com -> ${ip} (IPv4, literal)`)
         return ip;
     } catch (err) {
         console.warn("Could not pre-resolve smtp.gmail.com to IPv4, falling back to hostname:", err.message);
@@ -16,7 +25,9 @@ async function resolveSmtpHost() {
     }
 }
 
+console.log("mail.service.js: starting SMTP host resolution...")
 const smtpHost = await resolveSmtpHost();
+console.log(`mail.service.js: using SMTP host = ${smtpHost}`)
 
 const transporter = nodemailer.createTransport({
     host: smtpHost,
@@ -38,6 +49,7 @@ transporter.verify()
 
 
 export async function sendEmail({ to, subject, html, text }) {
+    console.log(`sendEmail: attempting to send to ${to} via host ${smtpHost}`)
 
     const mailOptions = {
         from: process.env.GOOGLE_USER,
