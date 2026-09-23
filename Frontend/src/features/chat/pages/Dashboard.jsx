@@ -42,11 +42,55 @@ const MenuIcon = (props) => (
   </svg>
 )
 
+const WebIcon = (props) => (
+  <svg viewBox="0 0 16 16" fill="none" {...props}>
+    <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M2.5 8H13.5M8 2.5C9.4 4 10.1 6 10.1 8C10.1 10 9.4 12 8 13.5C6.6 12 5.9 10 5.9 8C5.9 6 6.6 4 8 2.5Z" stroke="currentColor" strokeWidth="1.2" />
+  </svg>
+)
+
+const CloudIcon = (props) => (
+  <svg viewBox="0 0 16 16" fill="none" {...props}>
+    <path d="M4.8 11.8H11.2C12.5 11.8 13.5 10.8 13.5 9.5C13.5 8.3 12.6 7.4 11.5 7.3C11.3 5.5 9.8 4.2 8 4.2C6.3 4.2 4.9 5.4 4.6 7C3.3 7.1 2.3 8.2 2.3 9.5C2.3 10.8 3.4 11.8 4.8 11.8Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+  </svg>
+)
+
+const NewsIcon = (props) => (
+  <svg viewBox="0 0 16 16" fill="none" {...props}>
+    <rect x="2.3" y="3" width="11.4" height="10" rx="0.6" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M4.6 5.6H8.4M4.6 8H11.4M4.6 10.2H11.4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+  </svg>
+)
+
+const StockIcon = (props) => (
+  <svg viewBox="0 0 16 16" fill="none" {...props}>
+    <path d="M2.5 12.5L6.2 8.4L8.8 10.6L13.5 5.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 5H13.5V8.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 const SUGGESTIONS = [
   "Summarise this week's AI news and email it to my team",
   'Compare Zustand and Redux Toolkit for a mid-size app',
   'Find remote SDE internships and mail me the list',
   "What's changed in the latest React release?",
+]
+
+const CAPABILITIES = [
+  { label: 'Web search', icon: WebIcon },
+  { label: 'Weather', icon: CloudIcon },
+  { label: 'News', icon: NewsIcon },
+  { label: 'Stocks', icon: StockIcon },
+]
+
+// mirrors what the four real tools in ai.service.js actually do — cycled in
+// the empty state so the product demonstrates itself instead of just
+// claiming to be capable
+const TICKER = [
+  'Pulls live prices for any stock ticker',
+  "Checks today's weather for any city",
+  'Reads the latest headlines on a topic',
+  'Searches the open web for anything else',
 ]
 
 // group a flat list of chats into editorial date buckets, newest first
@@ -80,6 +124,7 @@ const Dashboard = () => {
   const [threadSearch, setThreadSearch] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [pendingUserMessage, setPendingUserMessage] = useState(null)
+  const [tickerIndex, setTickerIndex] = useState(0)
 
   const chats = useSelector((state) => state.chat.chats)
   const currentChatId = useSelector((state) => state.chat.currentChatId)
@@ -90,6 +135,12 @@ const Dashboard = () => {
   useEffect(() => {           // dashboard page pr phochte hi initializeSocketConnection() ise caall krdete hain or socket.io connecct hojata hain user bhi
     chat.initializeSocketConnection()
     chat.handleGetChats()
+  }, [])
+
+  // rotates the empty-state capability line every few seconds, purely visual
+  useEffect(() => {
+    const id = setInterval(() => setTickerIndex((i) => (i + 1) % TICKER.length), 3200)
+    return () => clearInterval(id)
   }, [])
 
   const handleSubmitMessage = async (event) => {
@@ -146,8 +197,11 @@ const Dashboard = () => {
         }`}
       >
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <Mark className="h-[18px] w-[18px] text-[var(--accent)]" />
-          <span className="text-[15px] font-semibold tracking-[-0.01em]">QueryPilot</span>
+          <Mark className="qp-dash-mark h-[18px] w-[18px] text-[var(--accent)]" />
+          <span className="text-[15px] font-semibold tracking-[-0.01em]">
+            Query<span className="text-[var(--ink-dim)]">Pilot</span>
+          </span>
+          <span className="qp-dash-live online ml-auto" title="Agent online" />
         </div>
 
         <div className="px-4">
@@ -211,8 +265,22 @@ const Dashboard = () => {
           ))}
         </div>
 
-        <div className="qp-dash-mono px-5 py-2.5 text-[10px] uppercase tracking-[0.1em] text-[var(--ink-faint)]">
-          Web search + email tools active
+        {/* Real capabilities, not a static claim — mirrors the tools wired into ai.service.js */}
+        <div className="border-t border-[var(--border)] px-5 py-4">
+          <p className="qp-dash-mono mb-2.5 text-[9.5px] uppercase tracking-[0.14em] text-[var(--ink-faint)]">
+            Capabilities
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {CAPABILITIES.map(({ label, icon: Icon }) => (
+              <span
+                key={label}
+                className="qp-dash-row flex items-center gap-1.5 border border-[var(--border)] px-2 py-1 text-[10.5px] text-[var(--ink-dim)] hover:border-[var(--ink-faint)]"
+              >
+                <Icon className="h-2.5 w-2.5 text-[var(--accent)]" />
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center justify-between border-t border-[var(--border)] px-5 py-3.5">
@@ -258,13 +326,20 @@ const Dashboard = () => {
                 QueryPilot
               </p>
               <h2 className="text-[30px] font-semibold leading-[1.15] tracking-[-0.01em] md:text-[36px]">
-                Research anything.
+                Research anything<span className="text-[var(--accent)]">.</span>
               </h2>
               <p className="mt-3 max-w-[46ch] text-[15px] leading-relaxed text-[var(--ink-dim)]">
                 Search the web. Follow the evidence. Build an answer.
               </p>
 
-              <div className="mt-9 divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)]">
+              <div className="qp-dash-mono mt-4 flex items-center gap-2 text-[12px] text-[var(--ink-faint)]">
+                <span className="qp-dash-live online" />
+                <span key={tickerIndex} className="qp-dash-fade-in">
+                  {TICKER[tickerIndex]}
+                </span>
+              </div>
+
+              <div className="mt-8 divide-y divide-[var(--border-soft)] border-y border-[var(--border-soft)]">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}

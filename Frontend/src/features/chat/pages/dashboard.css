@@ -14,6 +14,16 @@
   font-family: 'Archivo', system-ui, sans-serif;
 }
 
+/* Tailwind's preflight resets <button> cursor to default — every clickable
+   control in the dashboard (new thread, search, thread rows, suggestions,
+   send, logout) should show a pointer, and not-allowed while disabled. */
+.qp-dash button:not(:disabled) {
+  cursor: pointer;
+}
+.qp-dash button:disabled {
+  cursor: not-allowed;
+}
+
 .qp-dash-mono {
   font-family: 'Martian Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 }
@@ -33,6 +43,24 @@
 
 .qp-dash-live.thinking {
   animation: qp-dash-pulse 1.4s ease-in-out infinite;
+}
+
+/* slower, gentler than .thinking — signals "idle but alive" rather than "busy" */
+.qp-dash-live.online {
+  background: var(--ink-faint);
+  animation: qp-dash-online 3.6s ease-in-out infinite;
+}
+
+/* the wordmark's triangle breathes very slightly — a low-key "system is
+   alive" cue rather than a loud loop */
+.qp-dash-mark {
+  animation: qp-dash-breathe 4.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.qp-dash-fade-in {
+  display: inline-block;
+  animation: qp-dash-fade 0.4s ease;
 }
 
 .qp-dash-dots span {
@@ -73,6 +101,21 @@
 @keyframes qp-dash-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+@keyframes qp-dash-online {
+  0%, 100% { opacity: 0.9; background: var(--accent); }
+  50% { opacity: 0.4; background: var(--ink-faint); }
+}
+
+@keyframes qp-dash-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: 0.85; }
+}
+
+@keyframes qp-dash-fade {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes qp-dash-dots {
