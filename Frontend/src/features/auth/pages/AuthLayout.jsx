@@ -228,7 +228,7 @@ export const AuthLayout = ({ title, subtitle, footer, children }) => (
 
       <div className="relative z-10 max-w-[560px]">
         <h2 className="qp-display text-[42px] leading-[1.05] xl:text-[52px]">
-          We architect agents.
+          Ask once.<br />It does the rest.
         </h2>
         <p className="mt-5 max-w-[46ch] text-[16px] leading-relaxed text-[#f2f0ea]/60">
           QueryPilot searches the web, reads what it finds, and emails the answer to whoever you name.
