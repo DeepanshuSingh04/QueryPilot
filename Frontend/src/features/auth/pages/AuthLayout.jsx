@@ -226,14 +226,14 @@ export const AuthLayout = ({ title, subtitle, footer, children }) => (
         <span className="qp-display text-[22px]">QueryPilot</span>
       </div>
 
-      <div className="relative z-10 max-w-[560px]">
-        <h2 className="qp-display text-[42px] leading-[1.05] xl:text-[52px]">
+      <div className="relative z-10 max-w-[640px]">
+        <h2 className="qp-display text-[clamp(34px,3.6vw,52px)] leading-[1.05] xl:text-[52px]">
           Ask once.<br />It does the rest.
         </h2>
         <p className="mt-5 max-w-[46ch] text-[16px] leading-relaxed text-[#f2f0ea]/60">
           QueryPilot searches the web, reads what it finds, and emails the answer to whoever you name.
         </p>
-        <AgentTrace />
+        <div className="max-w-[560px]"><AgentTrace /></div>
       </div>
 
       <p className="qp-mono relative z-10 text-[11px] uppercase tracking-[0.1em] text-[#f2f0ea]/35">
